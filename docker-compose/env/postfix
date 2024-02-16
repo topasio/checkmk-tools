@@ -1,4 +1,4 @@
-#
+# https://github.com/juanluisbaptiste/docker-postfix
 SMTP_SERVER=
 SMTP_PORT=
 SMTP_USERNAME=

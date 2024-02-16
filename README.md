@@ -11,6 +11,7 @@ Some helpful scripts for running your first checkmk RAW instance with SSL/TLS an
 - For up-to-date TLS settings, see https://ssl-config.mozilla.org
 
 # Mail notification with postfix
+- Modify the `env/postfix` configuration
 - For an explanation of the configuration parameters, please see https://github.com/juanluisbaptiste/docker-postfix
 
 # Linux Agent Deployment
