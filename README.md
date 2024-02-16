@@ -15,9 +15,9 @@ Some helpful scripts for running your first checkmk RAW instance with SSL/TLS an
 - For an explanation of the configuration parameters, please see https://github.com/juanluisbaptiste/docker-postfix
 
 # Linux Agent Deployment
-- You can deploy the agents directly from the web interface i. e. https://YOURHOST:8080/cmk/check_mk/agents/check-mk-agent_2.2.0p22-1_all.deb
-- Modify the ansible script with the latest version `ansible-checkmk.yml`
-- Run the ansible script ``ansible-playbook -i hosts install-checkmk.yml -K``
+- You can download the agent installer directly from the web interface i. e. https://YOURHOST:8080/cmk/check_mk/agents/check-mk-agent_2.2.0p22-1_all.deb
+- Modify the ansible script `ansible-checkmk.yml` with the latest version 
+- Run the ansible script `ansible-playbook -i hosts install-checkmk.yml -K`
 - Configure in cmk `Add rule: Checkmk Agent installation auditing` to ensure all agents have same version as the management site
 
 # Updates
