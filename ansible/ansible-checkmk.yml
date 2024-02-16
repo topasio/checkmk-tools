@@ -1,0 +1,72 @@
+---
+- hosts: checkmk
+  gather_facts: yes
+  become: yes
+  vars:
+    checkmk_agent_deb_src: ./check-mk-agent_2.2.0p22-1_all.deb
+    checkmk_agent_deb_dest: /root/check-mk-agent.deb
+    checkmk_server_url: YOURSERVER:8000
+    checkmk_site: cmk
+    checkmk_user: cmkregister
+    checkmk_package_name: check-mk-agent
+    checkmk_agent_version: "2.2.0p22-1"
+    checkmk_password: YOURPASS
+
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Check if Checkmk agent is already installed
+      set_fact:
+        checkmk_installed: "{{ checkmk_package_name in ansible_facts.packages }}"
+
+    - name: Determine if installed Checkmk agent needs an update
+      set_fact:
+        checkmk_needs_update: "{{ ansible_facts.packages[checkmk_package_name][0].version != checkmk_agent_version }}"
+      when: checkmk_installed
+
+    - name: Copy Checkmk agent package
+      ansible.builtin.copy:
+        src: "{{ checkmk_agent_deb_src }}"
+        dest: "{{ checkmk_agent_deb_dest }}"
+        owner: root
+        group: root
+        mode: '0660'
+      when: not checkmk_installed or checkmk_needs_update
+
+    - name: Install Checkmk agent if not installed
+      ansible.builtin.apt:
+        deb: "{{ checkmk_agent_deb_dest }}"
+      when: not checkmk_installed
+
+    - name: Update Checkmk agent only if installed and version is different
+      ansible.builtin.apt:
+        deb: "{{ checkmk_agent_deb_dest }}"
+      when: checkmk_installed and checkmk_needs_update
+
+    - name: Register host with Checkmk server only if not installed
+      ansible.builtin.shell: >
+        cmk-agent-ctl register --server {{ checkmk_server_url }} --site {{ checkmk_site }}
+        --trust-cert --user {{ checkmk_user }} --password {{ checkmk_password }}
+        --hostname $(hostname | cut -d. -f1)
+      register: register_result
+      when: not checkmk_installed
+      ignore_errors: yes
+      failed_when: "'Error' in register_result.stdout or register_result.rc | default(0) != 0"
+
+    - name: Check registration result
+      ansible.builtin.fail:
+        msg: "Registration failed. Please check the output."
+      when: "'rc' in register_result and register_result.rc != 0"
+
+    - name: Show output of the registration cmd
+      ansible.builtin.debug:
+        var: register_result.stdout_lines
+      when: not checkmk_installed and 'rc' in register_result and register_result.rc == 0
+
+    - name: Cleanup
+      ansible.builtin.file:
+        path: "{{ checkmk_agent_deb_dest }}"
+        state: absent
+      when: not checkmk_installed or checkmk_needs_update
